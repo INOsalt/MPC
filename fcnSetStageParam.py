@@ -25,8 +25,8 @@ class MPCModel:
         self.printClosedloopData = None
         self.flag = 0
 
-def fcnSetStageParam(imput):
-    if imput == 'fst':
+def fcnSetStageParam(input):
+    if input == 'fst':
         mpcModel = MPCModel(name='fst')
         mpcModel.iter = 24 * 2  # 7天: 168
         mpcModel.horizon = 48  # 默认值为48

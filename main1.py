@@ -7,8 +7,8 @@ from solveOptimalControlProblem import solveOptimalControlProblem
 import fcnChoose
 #======================================
 # 选择优化算法和设置参数
-
-
+tol_opt, opt_option, iprint, printClosedloopDataFunc = fcnChooseAlgorithm(1e-8, 1, 5, printClosedloopData)
+pip
 # 初始化
 fst_output_data = []
 snd_output_data = []
@@ -122,3 +122,36 @@ class MPC:
     miPV = fst.PV
     miload = fst.load
 
+    # 绘制图形
+    plt.figure(1)
+    plt.bar(range(len(esssoc[:, 0])), esssoc[:, 0], linewidth=0.001)
+    plt.xlabel('时间')
+    plt.ylabel('储能功率')
+    plt.twinx()
+    plt.plot(esssoc[:, 1], '-g*', linewidth=1.25)
+    plt.grid()
+    plt.xlabel('时间')
+    plt.ylabel('SOC值')
+    plt.title('储能系统效果对比')
+    plt.legend(['储能功率', 'SOC值'])
+
+    plt.figure(2)
+    plt.plot(esspower[:, 0], '-r*', linewidth=1.25)
+    plt.grid()
+    plt.xlabel('时间')
+    plt.ylabel('发电功率')
+
+    plt.figure(3)
+    plt.plot(esspower[:, 1], '-r*', linewidth=1.25)
+    plt.grid()
+    plt.xlabel('时间')
+    plt.ylabel('电池功率')
+
+    plt.figure(4)
+    plt.plot(miload, '-g*', linewidth=1.15)
+    plt.plot(miPV, '-r*', linewidth=1.15)
+    plt.plot(miwind, '-y*', linewidth=1.15)
+    plt.xlabel('时间')
+    plt.ylabel('功率/MW')
+    plt.title('负荷、光伏、风力')
+    plt.legend(['负荷', '
