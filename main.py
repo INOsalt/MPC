@@ -6,8 +6,7 @@ from fcnSetStageParam import fcnSetStageParam
 from solveOptimalControlProblem import solveOptimalControlProblem
 
 import fcnChoose
-from Remodel import Remodel
-from HAVCmodel import HAVCmodel
+from objective_fst import objective_fst
 #======================================
 # 选择优化算法和设置参数
 
@@ -21,7 +20,14 @@ options = fcnChoose.fcnChooseOption(1, 1e-8, fst.u0)
 
 #========================================
 class MPC:
-    def __init__(self, T_room, SOC_ESS_0):  #
+    def __init__(self, time, step, Tin, Tout,SOC_ESS_0,Cap):  #
+        self.time = time
+        self.step = step
+        self.Tin = Tin
+        self.Tout = Tout
+        self.SOC_ESS_0 = SOC_ESS_0
+        self.Cap = Cap
+
 
         self.reset()
     # 开始迭代：第一层
@@ -30,39 +36,47 @@ class MPC:
         self.
         #=============================
 
-    def mpccal(self, time, step):
+    def mpccal(self):
         # 初始化
         fst_output_data = []
         snd_output_data = []
         fst_horizon = 24 * 7  # hour
-        fst_step = 24  # hour
+        fst_step = 12  # hour
         fst_iter = fst_horizon / fst_step  # 迭代次数
-        snd_horizon = 24  # hour
-        snd_step = step  # hour
+        snd_horizon = fst_step  # hour
+        snd_step = self.step  # hour
         snd_iter = snd_horizon / snd_step  # 迭代次数
 
         # 导入数据集（预测数据）
-        startline =  time/step
+        startline =  self.time/self.step
         start_row = startline - 1
-        num_rows = fst_horizon/step
+        num_rows = fst_horizon/self.step
 
         # wind = pd.read_csv("/data/wind.csv", skiprows=start_row, nrows=num_rows).value
         I = pd.read_csv("/data/solar.csv", skiprows=start_row, nrows=num_rows).value #辐照强度
         T = pd.read_csv("/data/T.csv", skiprows=start_row, nrows=num_rows).value  # 温度
+        Solar_azimuth = pd.read_csv("/data/Solar_azimuth.csv", skiprows=start_row, nrows=num_rows).value  # 太阳方位角
+        Solar_zenith = pd.read_csv("/data/Solar_zenith.csv", skiprows=start_row, nrows=num_rows).value  # 太阳天顶角
         H = pd.read_csv("/data/H.csv", skiprows=start_row, nrows=num_rows).value  # 湿度
         price = pd.read_csv("/data/price.csv").value #24小时
 
         #===第一层MPC====
 
-        fst_mpciter = time
+        fst_mpciter = 0 #第几个步长
 
         while fst_mpciter < fst_iter: #fst_iter迭代次数
             I_fst_step = I[fst_mpciter:fst_mpciter + fst_step]
             T_fst_step = T[fst_mpciter:fst_mpciter + fst_step]
+            Solar_azimuth_fst_step = Solar_azimuth[fst_mpciter:fst_mpciter + fst_step]
+            Solar_zenith_fst_step = Solar_zenith[fst_mpciter:fst_mpciter + fst_step]
             H_fst_step = H[fst_mpciter:fst_mpciter + fst_step]
+
             # 第一次MPC计算
-            Q_re = Remodel(I_fst_step, T_fst_step, step) #新能源发电
-            Q_HAVC = HAVCmodel(T_fst_step, H_fst_step, Q_solar, Q_lighting, Q_equipment, Q_internal)
+            objective = objective_fst(I_fst_step, T_fst_step, H_fst_step, Solar_zenith_fst_step, Solar_azimuth_fst_step, self.step,
+                          self.step)
+
+
+
 
             # 第二层初始化
             snd.pv_all = []

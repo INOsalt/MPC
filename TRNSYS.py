@@ -31,7 +31,8 @@ def StartTime(TRNData):
     a2 = TRNData[thisModule]["inputs"][3]
 
     # Calculate the outputs
-    y = MPC.mpccal(time, step)
+    MPC1 = MPC()
+    y = MPC1.mpccal(time, step)
 
     # Set outputs in TRNData
     TRNData[thisModule]["outputs"][0] = y
