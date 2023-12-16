@@ -4,22 +4,17 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from fcnSetStageParam import fcnSetStageParam
 from solveOptimalControlProblem import solveOptimalControlProblem
+
 import fcnChoose
+from Remodel import Remodel
+from HAVCmodel import HAVCmodel
 #======================================
 # 选择优化算法和设置参数
 
+# fst = fcnSetStageParam('fst')
+# snd = fcnSetStageParam('snd')
 
-# 初始化
-fst_output_data = []
-snd_output_data = []
-fst = fcnSetStageParam('fst')
-snd = fcnSetStageParam('snd')
 
-# 导入数据集（预测数据）
-load = pd.read_csv("/data/load.csv").value
-wind = pd.read_csv("/data/wind.csv").value
-PV = pd.read_csv("/data/solar.csv").value
-price = pd.read_csv("/data/price.csv").value
 
 # 非线性MPC算法的第二步
 options = fcnChoose.fcnChooseOption(1, 1e-8, fst.u0)
@@ -34,32 +29,40 @@ class MPC:
     def reset(self):
         self.
         #=============================
-    def fst_mpc(fst):#第一层mpc计算-输出建议的ESS
-        # 计算电力平衡
-        fst.net_load = fst.load - fst.pv - fst.wind  # 和grid互动的
 
-        # 解决最优控制问题
-        fst.T_sp_ave, fst.SOC_ESS_end = solveOptimalControlProblem(fst)
+    def mpccal(self, time, step):
+        # 初始化
+        fst_output_data = []
+        snd_output_data = []
+        fst_horizon = 24 * 7  # hour
+        fst_step = 24  # hour
+        fst_iter = fst_horizon / fst_step  # 迭代次数
+        snd_horizon = 24  # hour
+        snd_step = step  # hour
+        snd_iter = snd_horizon / snd_step  # 迭代次数
 
-        # 保存当前信息
-        t = output
-        x = computeOpenloopSolution(fst, fst.u0)
-        u = fst.u0
+        # 导入数据集（预测数据）
+        startline =  time/step
+        start_row = startline - 1
+        num_rows = fst_horizon/step
 
-        return t, x, u
-        #=============================
+        # wind = pd.read_csv("/data/wind.csv", skiprows=start_row, nrows=num_rows).value
+        I = pd.read_csv("/data/solar.csv", skiprows=start_row, nrows=num_rows).value #辐照强度
+        T = pd.read_csv("/data/T.csv", skiprows=start_row, nrows=num_rows).value  # 温度
+        H = pd.read_csv("/data/H.csv", skiprows=start_row, nrows=num_rows).value  # 湿度
+        price = pd.read_csv("/data/price.csv").value #24小时
 
-    def mpccal(self, time):
+        #===第一层MPC====
+
         fst_mpciter = time
-        while fst_mpciter < fst.iter: #fst.iter总时长在setpara中定义
-            # 读取数据
-            fst_load = load[fst_mpciter: fst_mpciter + fst.horizon]
-            fst_PV = PV[fst_mpciter: fst_mpciter + fst.horizon]
-            fst_wind = wind[fst_mpciter: fst_mpciter + fst.horizon]
-            fst_price = price[fst_mpciter: fst_mpciter + fst.horizon]
 
+        while fst_mpciter < fst_iter: #fst_iter迭代次数
+            I_fst_step = I[fst_mpciter:fst_mpciter + fst_step]
+            T_fst_step = T[fst_mpciter:fst_mpciter + fst_step]
+            H_fst_step = H[fst_mpciter:fst_mpciter + fst_step]
             # 第一次MPC计算
-            fst.f_dyn, fst.x_dyn, fst.u_dyn = fst_mpc(fst)
+            Q_re = Remodel(I_fst_step, T_fst_step, step) #新能源发电
+            Q_HAVC = HAVCmodel(T_fst_step, H_fst_step, Q_solar, Q_lighting, Q_equipment, Q_internal)
 
             # 第二层初始化
             snd.pv_all = []

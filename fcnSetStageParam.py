@@ -49,7 +49,7 @@ def fcnSetStageParam(input):
         # 设置系统模型
         mpcModel.battery = batteryModel()
 
-    elif imput == 'snd':
+    elif input == 'snd':
         mpcModel = MPCModel(name='snd', from_fst=2)
         mpcModel.iter = 12
         mpcModel.horizon = 12

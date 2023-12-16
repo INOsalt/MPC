@@ -25,13 +25,13 @@ def Initialization(TRNData):
 # ----------------------------------------------------------------------------------------------------------------------
 def StartTime(TRNData):
     # Define local short names for convenience (this is optional)
-    x = TRNData[thisModule]["inputs"][0]
-    a0 = TRNData[thisModule]["inputs"][1]
+    time = TRNData[thisModule]["inputs"][0] #Time
+    step = TRNData[thisModule]["inputs"][1] #step
     a1 = TRNData[thisModule]["inputs"][2]
     a2 = TRNData[thisModule]["inputs"][3]
 
     # Calculate the outputs
-    y = a0 + a1 * x + a2 * numpy.power(x, 2)
+    y = MPC.mpccal(time, step)
 
     # Set outputs in TRNData
     TRNData[thisModule]["outputs"][0] = y
