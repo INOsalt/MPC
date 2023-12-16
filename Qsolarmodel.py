@@ -1,5 +1,5 @@
 import numpy as np
-
+#！！！此代码有问题，输入不同输出不变
 def calculate_solar_incidence_angle(sun_zenith_angle, sun_azimuth_angle, wall_azimuth_angle):
     # 将角度从度数转换为弧度
     sun_zenith_angle_rad = np.radians(sun_zenith_angle)  # 太阳天顶角转换为弧度

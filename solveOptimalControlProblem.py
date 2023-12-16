@@ -1,6 +1,6 @@
 import time
 from scipy.optimize import minimize
-from objective import Cost
+from objective1 import Cost
 #==========================
 def solveOptimalControlProblem(initial_guess):
     def cost(params):

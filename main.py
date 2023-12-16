@@ -5,8 +5,18 @@ import matplotlib.pyplot as plt
 from fcnSetStageParam import fcnSetStageParam
 from solveOptimalControlProblem import solveOptimalControlProblem
 
+from Dataread import I #辐照强度
+from Dataread import T  # 温度
+from Dataread import Solar_azimuth  # 太阳方位角
+from Dataread import Solar_zenith # 太阳天顶角
+from Dataread import H  # 湿度
+from Dataread import price  #24小时
+from Dataread import fst_horizon # hour
+from Dataread import fst_step # hour
+from Dataread import fst_iter # 迭代次数
+
 import fcnChoose
-from objective_fst import objective_fst
+from PSO import Particle
 #======================================
 # 选择优化算法和设置参数
 
@@ -20,7 +30,7 @@ options = fcnChoose.fcnChooseOption(1, 1e-8, fst.u0)
 
 #========================================
 class MPC:
-    def __init__(self, time, step, Tin, Tout,SOC_ESS_0,Cap):  #
+    def __init__(self, time, step, Tin, Tout,SOC_ESS_0,Cap):  #这些是初始，来自TRNSYS
         self.time = time
         self.step = step
         self.Tin = Tin
@@ -28,52 +38,31 @@ class MPC:
         self.SOC_ESS_0 = SOC_ESS_0
         self.Cap = Cap
 
-
-        self.reset()
-    # 开始迭代：第一层
-    #=======================================
-    def reset(self):
-        self.
-        #=============================
-
-    def mpccal(self):
         # 初始化
         fst_output_data = []
         snd_output_data = []
-        fst_horizon = 24 * 7  # hour
-        fst_step = 12  # hour
-        fst_iter = fst_horizon / fst_step  # 迭代次数
-        snd_horizon = fst_step  # hour
-        snd_step = self.step  # hour
-        snd_iter = snd_horizon / snd_step  # 迭代次数
+        self.snd_horizon = fst_step  # hour
+        self.snd_step = self.step  # hour
+        self.snd_iter = self.snd_horizon / self.snd_step  # 迭代次数
 
         # 导入数据集（预测数据）
         startline =  self.time/self.step
         start_row = startline - 1
         num_rows = fst_horizon/self.step
 
-        # wind = pd.read_csv("/data/wind.csv", skiprows=start_row, nrows=num_rows).value
-        I = pd.read_csv("/data/solar.csv", skiprows=start_row, nrows=num_rows).value #辐照强度
-        T = pd.read_csv("/data/T.csv", skiprows=start_row, nrows=num_rows).value  # 温度
-        Solar_azimuth = pd.read_csv("/data/Solar_azimuth.csv", skiprows=start_row, nrows=num_rows).value  # 太阳方位角
-        Solar_zenith = pd.read_csv("/data/Solar_zenith.csv", skiprows=start_row, nrows=num_rows).value  # 太阳天顶角
-        H = pd.read_csv("/data/H.csv", skiprows=start_row, nrows=num_rows).value  # 湿度
-        price = pd.read_csv("/data/price.csv").value #24小时
 
+        self.reset()
+
+    #=======================================
+    def reset(self):
+
+    #=============================
+
+    def mpccal(self):
         #===第一层MPC====
+        #直接调用优化，迭代在objective
 
-        fst_mpciter = 0 #第几个步长
 
-        while fst_mpciter < fst_iter: #fst_iter迭代次数
-            I_fst_step = I[fst_mpciter:fst_mpciter + fst_step]
-            T_fst_step = T[fst_mpciter:fst_mpciter + fst_step]
-            Solar_azimuth_fst_step = Solar_azimuth[fst_mpciter:fst_mpciter + fst_step]
-            Solar_zenith_fst_step = Solar_zenith[fst_mpciter:fst_mpciter + fst_step]
-            H_fst_step = H[fst_mpciter:fst_mpciter + fst_step]
-
-            # 第一次MPC计算
-            objective = objective_fst(I_fst_step, T_fst_step, H_fst_step, Solar_zenith_fst_step, Solar_azimuth_fst_step, self.step,
-                          self.step)
 
 
 

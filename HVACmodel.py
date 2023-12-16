@@ -37,7 +37,8 @@ def thermal_model(Y, t, Tout, Qsolar, Qinter): #RC model
 
     return [dT_ex_dt, dT_win_dt, dT_im_dt, dT_i_dt]
 
-def HVACmodel(initial_conditions, t, Tout, Qsolar, Qinter): #RC model
+def HVACmodel(x, T_fst_step, H_fst_step, Q_solar, Q_lighting_heat, Q_equipment_heat, Q_people): #RC model
+    Tsp = x
     # 初始状态
     initial_conditions = [Tout_initial, Tout_initial, Tin_initial, Tin_initial]
 
