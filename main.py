@@ -5,15 +5,7 @@ import matplotlib.pyplot as plt
 from fcnSetStageParam import fcnSetStageParam
 from solveOptimalControlProblem import solveOptimalControlProblem
 
-from Dataread import I #辐照强度
-from Dataread import T  # 温度
-from Dataread import Solar_azimuth  # 太阳方位角
-from Dataread import Solar_zenith # 太阳天顶角
-from Dataread import H  # 湿度
-from Dataread import price  #24小时
-from Dataread import fst_horizon # hour
-from Dataread import fst_step # hour
-from Dataread import fst_iter # 迭代次数
+from mpc_fst import mpc_fst
 
 import fcnChoose
 from PSO import Particle
@@ -41,15 +33,37 @@ class MPC:
         # 初始化
         fst_output_data = []
         snd_output_data = []
+        fst_horizon = 24 * 7  # hour
+        fst_step = 12  # hour
+        fst_iter = fst_horizon / fst_step  # 迭代次数
         self.snd_horizon = fst_step  # hour
         self.snd_step = self.step  # hour
         self.snd_iter = self.snd_horizon / self.snd_step  # 迭代次数
 
         # 导入数据集（预测数据）
-        startline =  self.time/self.step
-        start_row = startline - 1
-        num_rows = fst_horizon/self.step
 
+
+        startline = self.time / self.step
+        start_row = startline - 1
+        num_rows = fst_horizon / self.step
+
+        # 创建字典并读取数据
+        weather_data = {
+            'I': pd.read_csv("/data/solar.csv", skiprows=start_row, nrows=num_rows).value,  # 辐照强度
+            'T': pd.read_csv("/data/T.csv", skiprows=start_row, nrows=num_rows).value,  # 温度
+            'Solar_azimuth': pd.read_csv("/data/Solar_azimuth.csv", skiprows=start_row, nrows=num_rows).value,  # 太阳方位角
+            'Solar_zenith': pd.read_csv("/data/Solar_zenith.csv", skiprows=start_row, nrows=num_rows).value,  # 太阳天顶角
+            'H': pd.read_csv("/data/H.csv", skiprows=start_row, nrows=num_rows).value,  # 湿度
+        }
+        # 一层的预测数据
+        chunk_size = len(weather_data['I']) // fst_iter
+
+        # 创建新的字典，其中每个键对应一个包含切分后数据的列表
+        self.forcast_weather_data = {
+            key: [values[i:i + chunk_size] for i in range(0, len(values), chunk_size)]
+            for key, values in weather_data.items()
+        }
+        self.price = pd.read_csv("/data/price.csv").value  # 24小时
 
         self.reset()
 
@@ -60,7 +74,10 @@ class MPC:
 
     def mpccal(self):
         #===第一层MPC====
-        #直接调用优化，迭代在objective
+        #输出 X #Tsp HVAC  Y#P TO ESS 大于0充电小于0放电 Z#P TO EV
+        fst = mpc_fst(self.forcast_weather_data, self.price, self.time, self.step, self.Tin, self.Tout, self.SOC_ESS_0, self.Cap)
+        Tsp_ave, SOC_ESS_end, SOC_EV_end = mpc_fst.optimize_fst()
+
 
 
 
