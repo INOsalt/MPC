@@ -7,6 +7,13 @@ from solveOptimalControlProblem import solveOptimalControlProblem
 
 from mpc_fst import mpc_fst
 
+from Dataread import I_year # 辐照强度
+from Dataread import T_year  # 温度
+from Dataread import Solar_azimuth_year  # 太阳方位角
+from Dataread import Solar_zenith_year  # 太阳天顶角
+from Dataread import H_year # 湿度
+from Dataread import price # 24小时
+
 import fcnChoose
 from PSO import Particle
 #======================================
@@ -41,28 +48,36 @@ class MPC:
         self.snd_iter = self.snd_horizon / self.snd_step  # 迭代次数
 
         # 导入数据集（预测数据）
+        # 定义需要提取数据的时间范围（从 self.time 开始）
+        start_time = self.time
+        end_time = self.time + fst_horizon
 
-
-        startline = self.time / self.step
-        start_row = startline - 1
-        num_rows = fst_horizon / self.step
-
-        # 创建字典并读取数据
-        weather_data = {
-            'I': pd.read_csv("/data/solar.csv", skiprows=start_row, nrows=num_rows).value,  # 辐照强度
-            'T': pd.read_csv("/data/T.csv", skiprows=start_row, nrows=num_rows).value,  # 温度
-            'Solar_azimuth': pd.read_csv("/data/Solar_azimuth.csv", skiprows=start_row, nrows=num_rows).value,  # 太阳方位角
-            'Solar_zenith': pd.read_csv("/data/Solar_zenith.csv", skiprows=start_row, nrows=num_rows).value,  # 太阳天顶角
-            'H': pd.read_csv("/data/H.csv", skiprows=start_row, nrows=num_rows).value,  # 湿度
-        }
-        # 一层的预测数据
-        chunk_size = len(weather_data['I']) // fst_iter
-
-        # 创建新的字典，其中每个键对应一个包含切分后数据的列表
+        # 创建一个字典来存储预测的天气数据
         self.forcast_weather_data = {
-            key: [values[i:i + chunk_size] for i in range(0, len(values), chunk_size)]
-            for key, values in weather_data.items()
+            'I': [],
+            'T': [],
+            'Solar_azimuth': [],
+            'Solar_zenith': [],
+            'H': [],
         }
+
+        # 根据时间范围提取数据并均分为长度为 fst_step 的若干份
+        for i in range(fst_iter):
+            # 计算当前时间范围的起始和结束索引
+            start_idx = int(start_time / self.step)
+            end_idx = int(end_time / self.step)
+
+            # 提取数据并添加到字典中
+            self.forcast_weather_data['I'].append(I_year[start_idx:end_idx])
+            self.forcast_weather_data['T'].append(T_year[start_idx:end_idx])
+            self.forcast_weather_data['Solar_azimuth'].append(Solar_azimuth_year[start_idx:end_idx])
+            self.forcast_weather_data['Solar_zenith'].append(Solar_zenith_year[start_idx:end_idx])
+            self.forcast_weather_data['H'].append(H_year[start_idx:end_idx])
+
+            # 更新时间范围，以便提取下一段数据
+            start_time += fst_step
+            end_time += fst_step
+
         self.price = pd.read_csv("/data/price.csv").value  # 24小时
 
         self.reset()
